@@ -1,0 +1,24 @@
+# promptfoo eval suite for Agentic RAG MCP.
+# Run locally:  make eval          (from the repo root; needs env + seeded corpus)
+# Seed corpus:  python evals/seed.py --schema --reset
+# In CI this runs against a pgvector service container seeded with evals/corpus/.
+description: Agentic RAG MCP — groundedness, citations, refusal correctness, latency
+
+providers:
+  - id: file://provider.py
+    label: agentic-rag
+
+prompts:
+  - "{{question}}"
+
+defaultTest:
+  options:
+    # Grader for llm-rubric asserts — a separate, cheaper model than the pipeline.
+    provider: anthropic:messages:claude-haiku-4-5-20251001
+  assert:
+    - type: latency
+      threshold: 90000
+
+# Seed golden dataset (20 cases: answerable / refusal / adversarial).
+# Regression-capture rule: every production failure becomes a new case in golden.yaml.
+tests: file://golden.yaml
